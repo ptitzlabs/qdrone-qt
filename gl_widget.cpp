@@ -51,6 +51,8 @@ gl_widget::gl_widget(QWidget *parent):
     _n_psi_ticks = floor((2*_phi_ticks_r)*0.5/_z_ticks)+1;
     _psi_ticks_incr = 15;
 
+    _control_name = new QString[4];
+
 }
 
 void gl_widget::resizeGL(int w, int h){
@@ -86,7 +88,9 @@ void gl_widget::refresh_instruments(double phi,
                                     double zd,
                                     double xd,
                                     double yd,
-                                    double psi){
+                                    double psi,
+                                    QString *control_name){
+
     _phi = phi;
     _the = the;
     _psi = psi;
@@ -95,6 +99,7 @@ void gl_widget::refresh_instruments(double phi,
     _xd = xd;
     _yd = yd;
     _vel = sqrt(_xd*_xd+_yd*_yd);
+    _control_name = control_name;
 //    std::cout<<"phi: "<<_phi<< " the: " << _the << std::endl;
 
     calc_offset();
@@ -395,7 +400,7 @@ void gl_widget::draw_text(){
 
             }
 
-            glRasterPos2i(width*(0.5+(top_psi_tick_pos-i*_psi_ticks)/2)-4*n, 10);
+            glRasterPos2i(width*(0.5+(top_psi_tick_pos-i*_psi_ticks)/2)-4*n, 30);
 
             for (int i = 0; i < n; i++)
             {
@@ -406,6 +411,29 @@ void gl_widget::draw_text(){
 
     }
 
+
+    // Controller setting text
+    char label[50];
+    char setting[50];
+//    QByteArray ba;
+    for (int i = 0; i < 4; i++){
+//        _control_name[i] = "test";
+        n = sprintf(label,"U%i: ",i+1);
+        glRasterPos2i((int)(width*0.25)*i+10, (int)(height*0.95));
+        for (int i = 0; i < n; i++)
+        {
+            glutBitmapCharacter(font, label[i]);
+        }
+        QByteArray ba = _control_name[i].toLatin1();
+        n = sprintf(setting,ba.data());
+
+//        glRasterPos2i(width*(0.5-_phi_ticks_r/2)-8*(n+3), height/2-7);
+        for (int i = 0; i < n; i++)
+        {
+            glutBitmapCharacter(font, setting[i]);
+        }
+
+    }
 
 
 

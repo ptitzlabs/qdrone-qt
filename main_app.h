@@ -1,90 +1,64 @@
 #ifndef MAIN_APP_H
 #define MAIN_APP_H
 
-#include <QMainWindow>
-#include <QtCore>
-#include <QtConcurrent/QtConcurrent>
-#include <cstdio>
-#include <iostream>
+#include<QObject>
 
-#include "drone_thread.h"
-#include "controller_thread.h"
-#include "dynamics_id_thread.h"
-#include "controller_server_thread.h"
+#include "main_app_ui.h"
+#include "policy_search.hpp"
 
-namespace Ui {
-class main_app;
-}
-
-class main_app : public QMainWindow
-{
+class main_app: QObject{
     Q_OBJECT
-
 public:
-    explicit main_app(QWidget *parent = 0);
+    main_app();
     ~main_app();
+
+    void run();
+
+
 signals:
-    void fetch_joystick_output(double U1, double U2, double U3, double U4);
-    void refresh_instruments(double phi, double the);
-    void get_drone_parm(drone_parm * curr_parm);
+    void get_drone_parm(double *parm);
+    void get_joystick_axis(double * axis);
+    void set_drone_controller_setting(int id, int val);
+    void reset_sim();
+//    void get_cmac_cache();
 
 private:
-    Ui::main_app *ui;
 
-    void refresh_data();
+    void cycle_control_settings(int id);
 
-    // Drone simulation
-    drone_thread sim;
+    main_app_ui ui;
 
-    // Drone dynamics identification
-    dynamics_id_thread dynamics;
+    QThread ** learning_thread;
+    QThread * sim_thread;
+    QThread ui_thread;
 
-    // Communication between policy search and drone dynamics
-//    controller_server_thread controller_server;
+    QTimer * _sim_timer;
 
-    // Controller parameters
-    policy_parm alt_rate_parm;
+    int _sim_frequency_i;
+    double _sim_frequency_f;
+    int _sim_timestep_ms_i;
+    double _sim_timestep_ms_f;
+    double _sim_timestep_f;
 
-    // Controller policy search thread
-    controller_thread alt_rate_control;
+    drone_parm _drone_parm;
+    drone_dynamics * _drone_dynamics;
 
+    int * _n_controllers;
+    int **_policy_config;
 
-    // UI variables
+    policy_parm ** _policy_parm;
+    policy ** _policy;
+    double** _cmac_weights;
 
-    double x_l;
-    double y_l;
-    double z_l;
-    double phi_l;
-    double the_l;
-    double psi_l;
+    int *_controller_setting;
 
-    double xd_l;
-    double yd_l;
-    double zd_l;
-    double phid_l;
-    double thed_l;
-    double psid_l;
-
-    double xdd_l;
-    double ydd_l;
-    double zdd_l;
-    double phidd_l;
-    double thedd_l;
-    double psidd_l;
-
-    // Joystick parameters
-
-    cJoystick js;
-
-    void init_controller_parm();
+    void init_policy_parm();
+    void connect_signals();
 
 private slots:
-void update_drone_status(double * parm);
-void update_controller_status(double * parm, int id);
-void get_joystick_axis_status(double * axis);
-
-void get_policy_parm(int id, policy_parm parm);
-void get_policy_cmac(int id, cmac_net cmac);
+    void button_press_event_router(int id);
+    void get_controller_setting(int * setting, QString* name);
+//    void update_cmac_cache(int id, double * weights);
 
 
 };

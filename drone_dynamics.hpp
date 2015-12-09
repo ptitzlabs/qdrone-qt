@@ -7,6 +7,8 @@
 #include <iostream>
 #include "console_color.h"
 #include "joystick.h"
+#include <QObject>
+#include <QDebug>
 
 #define PI 3.1415926535897932384626433832795
 #define G_ACC 9.80665
@@ -35,7 +37,8 @@ struct drone_parm {
     ~drone_parm();
 };
 
-class drone_dynamics {
+class drone_dynamics : public QObject{
+    Q_OBJECT
    public:
     drone_dynamics(drone_parm* drone);
     ~drone_dynamics();
@@ -70,7 +73,7 @@ class drone_dynamics {
                     double h);
     void euler_step();
     void euler_step(double h);
-    void rk4_step();
+//    void rk4_step();
     void rk4_step(double h);
     void set_timestep(double h);
     
@@ -83,8 +86,21 @@ class drone_dynamics {
 
     void report();
 
+    void rk4_step();
+public slots:
+    void get_parm(double * parm);
+    void get_state(double * state, int * state_id, int n_states);
+    void step();
+    void set_controller_setting(int id, int val);
+    void get_controller_setting(int id, int *val);
+    void get_controller_setting(int * val);
+    void reset_sim();
+signals:
+    void get_joystick_input(double * js);
+
 
    private:
+    void get_control_input();
     // Pointers to drone constants
     drone_parm* p;
     //double* b;
@@ -125,6 +141,9 @@ class drone_dynamics {
     double * _l_limit; // state lower limit
     double * _u_limit; // state upper limit
     double * _spread; // state value spread
+
+    int *_controller_setting;
+private slots:
 };
 
 #endif

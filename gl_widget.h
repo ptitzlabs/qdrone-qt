@@ -35,7 +35,8 @@ public:
                                  double zd,
                                  double xd,
                                  double yd,
-                                 double psi);
+                                 double psi,
+                                 QString * control_name);
 
 private:
     int width; // screen width in px
@@ -74,6 +75,8 @@ private:
 
 
     double _ver_offset; // theta offset
+
+    QString * _control_name;
 
     void calc_offset(); // calculating horizon offset
 

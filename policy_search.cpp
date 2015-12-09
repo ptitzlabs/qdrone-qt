@@ -2,6 +2,7 @@
 
 policy_parm::policy_parm()
     :n_action_levels(5),  // number of action levels
+      name("DEFAULT"),      // default name
       id_state(0),          // null-pointer
       id_goal(0),           // null-pointer
       gamma(1),             // discount-rate parameter

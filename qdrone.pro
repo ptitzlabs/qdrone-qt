@@ -16,33 +16,52 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        main_app.cpp \
-    drone_thread.cpp \
-    gl_widget.cpp \
-    drone_dynamics.cpp \
+    main_app.cpp \
     joystick.cc \
-    controller_thread.cpp \
-    dynamics_id_thread.cpp \
+    gl_widget.cpp \
     policy_search.cpp \
+    main_app_ui.cpp \
+    drone_dynamics.cpp \
     cmac_net.cpp \
-    message_handler.cpp \
-    controller_server_thread.cpp \
-    controller_client.cpp
+    message_handler.cpp
+#        main_app.cpp \
+#    drone_thread.cpp \
+#    gl_widget.cpp \
+#    drone_dynamics.cpp \
+#    joystick.cc \
+#    controller_thread.cpp \
+#    dynamics_id_thread.cpp \
+#    policy_search.cpp \
+#    cmac_net.cpp \
+#    message_handler.cpp \
+#    controller_server_thread.cpp \
+#    controller_client.cpp
 
-    qutils.cpp
+#    qutils.cpp
 
 HEADERS  += main_app.h \
-    drone_thread.h \
-    gl_widget.h \
-    drone_dynamics.hpp \
-    console_color.h \
     joystick.h \
-    controller_thread.h \
-    dynamics_id_thread.h \
+    gl_widget.h \
     policy_search.hpp \
-    cmac_net.h \
+    main_app_ui.h \
+    qutils.h \
+    RL_headers.h \
+    drone_dynamics.hpp \
     message_handler.hpp \
-    controller_server_thread.h \
-    controller_client.h
+    console_color.h \
+    cmac_net.h
+#main_app.h \
+#    drone_thread.h \
+#    gl_widget.h \
+#    drone_dynamics.hpp \
+#    console_color.h \
+#    joystick.h \
+#    controller_thread.h \
+#    dynamics_id_thread.h \
+#    policy_search.hpp \
+#    cmac_net.h \
+#    message_handler.hpp \
+#    controller_server_thread.h \
+#    controller_client.h
 
-FORMS    += main_app.ui
+FORMS    += main_app_ui.ui

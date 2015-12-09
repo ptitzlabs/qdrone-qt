@@ -8,19 +8,23 @@
 #include "drone_dynamics.hpp"
 #include "message_handler.hpp"
 #include <string>
+#include <QString>
+#include <QObject>
 
 struct policy_parm {
     // State parameters
     int id_input;           // input id
     int n_action_levels;    // number of discrete action levels
     double* action_levels;  // action levels applied to input
-    std::string name; // controller name for output
+    QString name; // controller name for output
+    int type; // 0: off, 1: deriv, 2: state, 3: state error
     int id; // controller id number
 
     int* id_state;  // monitored states
     int n_state;    // number of states
     int* id_goal;   // goal states
     int n_goal;     // number of goals
+
 
     // Learning parameters
     double gamma;        // discount-rate parameter
@@ -35,6 +39,7 @@ struct policy_parm {
     int n_tilings;        // number of overlapping tilings
     double alpha;         // step-size parameter
 
+
     int n_cmac_parms;
 
     void set_n_goal(int n);
@@ -45,7 +50,8 @@ struct policy_parm {
     policy_parm& operator=(const policy_parm& source);
 };
 
-class policy {
+class policy: public QObject {
+    Q_OBJECT
    public:
     policy();
     ~policy();
@@ -79,6 +85,9 @@ class policy {
 
     policy_parm* get_policy_parm();
     cmac_net * get_cmac();
+
+signals:
+    void get_drone_state(double * state, int * state_id, int n_states);
 
    private:
     drone_dynamics* m;

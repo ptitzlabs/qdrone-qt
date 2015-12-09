@@ -212,6 +212,10 @@ drone_dynamics::drone_dynamics(drone_parm * drone)
     }
     calc_f(_xdd,_xd,_x,_u_true);
     report();
+
+
+
+    _controller_setting = new int[4]();
 }
 drone_dynamics::~drone_dynamics() {
     delete[] _parm;
@@ -535,3 +539,37 @@ double drone_dynamics::get_timestep() {return _h;}
 double* drone_dynamics::get_parm() {return *_parm;}
 int drone_dynamics::get_parm_number() { return _n_parms;}
 
+void drone_dynamics::get_parm(double * parm){
+    for (int i = 0; i < _n_parms; i++)
+        parm[i] = *_parm[i];
+}
+
+void drone_dynamics::get_state(double * state, int * state_id, int n_states){
+    for (int i = 0; i < n_states; i++)
+        state[i] = get_state(state_id[i]);
+}
+
+void drone_dynamics::step(){
+    get_control_input();
+    rk4_step();
+//    qDebug()<<*_parm[0]<<" "<<*_parm[1]<<" "<<*_parm[2];
+}
+void drone_dynamics::get_control_input(){
+    emit get_joystick_input(_u_scaled);
+    set_input(_u_scaled);
+}
+
+void drone_dynamics::set_controller_setting(int id, int val){
+    _controller_setting[id] = val;
+}
+void drone_dynamics::get_controller_setting(int id, int * val){
+    *val = _controller_setting[id];
+}
+void drone_dynamics::get_controller_setting(int* val){
+    for(int i = 0; i < 4; i++)
+        val[i] = _controller_setting[i];
+}
+
+void drone_dynamics::reset_sim(){
+    reset();
+}
