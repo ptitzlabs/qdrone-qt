@@ -7,35 +7,15 @@
 #include <iostream>
 #include "console_color.h"
 #include "joystick.h"
+
+
 #include <QObject>
 #include <QDebug>
 
-#define PI 3.1415926535897932384626433832795
-#define G_ACC 9.80665
-
-struct drone_parm {
-    double b;
-    double d;
-    double Ixx;
-    double Iyy;
-    double Izz;
-    double Irotor;
-    double m;
-    double l;
-
-    double * lower_limit;
-    double * upper_limit;
-    double * spread;
-
-    int n_states;
-    double a1_phi, a1_the, a1_psi, a2_phi, a2_the, a3_phi, a3_the, a3_psi;
+#include "controller_client.h"
+#include "param_definitions.h"
 
 
-    // Constructor
-    drone_parm();
-    drone_parm& operator=(const drone_parm& d);
-    ~drone_parm();
-};
 
 class drone_dynamics : public QObject{
     Q_OBJECT
@@ -64,6 +44,8 @@ class drone_dynamics : public QObject{
     void set_init_input(int id, double init_u_scaled);
 
 
+    void init_policy_parm(policy_parm ** policy_parm);
+
     void input_scale();
     void input_scale(int id, double u_scaled, double * u_true);
 
@@ -87,6 +69,9 @@ class drone_dynamics : public QObject{
     void report();
 
     void rk4_step();
+
+    void set_controller_cmac(int u, int id, cmac_net net);
+    void set_controller_parm(int u, int id, policy_parm parm);
 public slots:
     void get_parm(double * parm);
     void get_state(double * state, int * state_id, int n_states);
@@ -95,8 +80,11 @@ public slots:
     void get_controller_setting(int id, int *val);
     void get_controller_setting(int * val);
     void reset_sim();
+    void init_controller_parm(int * n_controllers);
 signals:
     void get_joystick_input(double * js);
+    void get_policy_cmac(int u, int id, cmac_net * net);
+    void get_controller_cmac_weights(int u, int id, double * weights);
 
 
    private:
@@ -142,7 +130,15 @@ signals:
     double * _u_limit; // state upper limit
     double * _spread; // state value spread
 
+//    QTimer * _controller_parm_timer;
+
     int *_controller_setting;
+    int *_n_controllers;
+    policy_parm ** _policy_parm;
+
+    controller_client *** _controller;
+
+//    int ** _policy_config;
 private slots:
 };
 

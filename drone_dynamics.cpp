@@ -1,88 +1,7 @@
 #include "drone_dynamics.hpp"
 
-using namespace std;
+//using namespace std;
 
-drone_parm::drone_parm()
-    : b(1.1487e-5),
-      d(2.69e-8),
-      Ixx(8.5e-3),
-      Iyy(8.5e-3),
-      Izz(15.8e-3),
-      Irotor(6.8e-5),
-      m(1.2),
-      l(0.24),
-      n_states(19){
-    // Pre-calculating various constants used in dynamic equations
-    a1_phi = (Iyy - Izz) / Ixx;
-    a1_the = (Izz - Ixx) / Iyy;
-    a1_psi = (Ixx - Iyy) / Izz;
-    a2_phi = 0;
-    a2_the = 0;
-
-    a3_phi = l / Ixx;
-    a3_the = l / Iyy;
-    a3_psi = 1 / Izz;
-
-    // allocating and assigning limits
-
-    lower_limit = new double[n_states];
-    upper_limit = new double[n_states];
-    spread = new double[n_states];
-
-    for (int i = 0; i < n_states; i++){
-        lower_limit[i] = 0;
-        upper_limit[i] = 0;
-        spread[i] = 0;
-    }
-
-    lower_limit[8] = -20;
-    upper_limit[8] = 10;
-    lower_limit[14] = -G_ACC*1.5;
-    upper_limit[14] = G_ACC*0.5;
-    lower_limit[18] = -1;
-    upper_limit[18] = 1;
-
-    for (int i = 0; i < n_states; i++) {
-        spread[i] = upper_limit[i] - lower_limit[i];
-    }
-
-}
-drone_parm::~drone_parm() {
-    delete[] lower_limit;
-    delete[] upper_limit;
-    delete[] spread;
-}
-
-drone_parm& drone_parm::operator=(const drone_parm& parm){
-    b = parm.b;
-    d = parm.d;
-    Ixx = parm.Ixx;
-    Iyy = parm.Iyy;
-    Izz = parm.Izz;
-    Irotor = parm.Irotor;
-    m = parm.m;
-    l = parm.l;
-    n_states = parm.n_states;
-
-    lower_limit = new double[n_states];
-    upper_limit = new double[n_states];
-    spread = new double[n_states];
-    for (int i = 0; i < n_states; i++){
-        lower_limit[i] = parm.lower_limit[i];
-        upper_limit[i] = parm.upper_limit[i];
-        spread[i] = parm.spread[i];
-    }
-
-    a1_phi = parm.a1_phi;
-    a1_the = parm.a1_the;
-    a1_psi = parm.a1_psi;
-    a2_phi = parm.a2_phi;
-    a2_the = parm.a2_the;
-    a3_phi = parm.a3_phi;
-    a3_the = parm.a3_the;
-    a3_psi = parm.a3_psi;
-    return* this;
-}
 
 drone_dynamics::drone_dynamics(drone_parm * drone)
     : _n_out(6), _n_aux_out(1), _n_in(4), _h(0.1) {
@@ -556,7 +475,55 @@ void drone_dynamics::step(){
 }
 void drone_dynamics::get_control_input(){
     emit get_joystick_input(_u_scaled);
+    int id;
+
+    double * state_tmp;
+    double * goal_tmp;
+    double * input_tmp;
+    double * weights_tmp;
+
+
+    int n_state;
+    int n_goal;
+    int * id_state;
+    int * id_goal;
+    double * input_scale;
+
+
+    for (int u = 0; u < 4; u++){
+        id = _controller_setting[u]-1;
+        if (_controller_setting[u]>0){
+            weights_tmp = _controller[u][id]->get_cmac_net()->get_weights();
+            n_state = _controller[u][id]->get_policy_parm()->n_state;
+            n_goal = _controller[u][id]->get_policy_parm()->n_goal;
+            id_state = _controller[u][id]->get_policy_parm()->id_state;
+            id_goal = _controller[u][id]->get_policy_parm()->id_goal;
+            input_scale = _controller[u][id]->get_policy_parm()->goal_input_scale;
+            state_tmp = new double[n_state];
+            goal_tmp = new double[n_goal];
+            get_state(state_tmp,id_state,n_state);
+            for (int i = 0; i < n_goal; i++)
+                goal_tmp[i] = 0;
+            emit get_controller_cmac_weights(u,id,weights_tmp);
+//            double sum;
+//            for (int i = 0; i < 3000; i++)
+//                sum+=_controller[u][id]->get_cmac_net()->get_weights()[i];
+
+//            qDebug()<<"ok! " << sum;
+            _controller[u][id]->get_control_input(&_u_scaled[u],state_tmp,goal_tmp);
+//            qDebug()<<n_state<<n_goal<<_u_scaled[u];
+//            _u_scaled[u] = 10;
+
+
+            //            emit get_controller_cmac_weights(u,id,
+            //                                             _controller[u][id]->get_cmac_net()->get_weights());
+        }
+//        delete state_tmp;
+//        delete goal_tmp;
+    }
     set_input(_u_scaled);
+
+
 }
 
 void drone_dynamics::set_controller_setting(int id, int val){
@@ -573,3 +540,38 @@ void drone_dynamics::get_controller_setting(int* val){
 void drone_dynamics::reset_sim(){
     reset();
 }
+
+void drone_dynamics::init_controller_parm(int *n_controllers){
+    _n_controllers = new int[4];
+    _controller = new controller_client ** [4];
+    for (int i = 0; i < 4; i++){
+        _controller[i] = new controller_client*[n_controllers[i]];
+        for (int j = 0; j < n_controllers[i];j++)
+            _controller[i][j] = new controller_client;
+        _n_controllers[i] = n_controllers[i];
+    }
+}
+
+void drone_dynamics::init_policy_parm(policy_parm **policy_parm){
+    _policy_parm = new struct policy_parm * [4];
+//    _policy_parm = new policy_parm * [4];
+    for (int i = 0; i < 4; i++){
+        _policy_parm[i] = new struct policy_parm[_n_controllers[i]];
+        for (int j = 0; j < _n_controllers[i]; j++)
+            _policy_parm[i][j] = policy_parm[i][j];
+    }
+
+//    qDebug()<<_policy_parm[0][0].name;
+}
+
+void drone_dynamics::set_controller_cmac(int u, int id, cmac_net net){
+    _controller[u][id]->set_cmac_net(net);
+}
+void drone_dynamics::set_controller_parm(int u, int id, policy_parm parm){
+    _controller[u][id]->set_parm(parm);
+}
+
+//void drone_dynamics::get_controller_cmac_weights(int u, int id, double * weights){
+//    _controller[u][id]->set_cmac_net_weights(weights);
+
+//}

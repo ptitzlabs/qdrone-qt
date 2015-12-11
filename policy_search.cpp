@@ -1,38 +1,5 @@
 #include "policy_search.hpp"
 
-policy_parm::policy_parm()
-    :n_action_levels(5),  // number of action levels
-      name("DEFAULT"),      // default name
-      id_state(0),          // null-pointer
-      id_goal(0),           // null-pointer
-      gamma(1),             // discount-rate parameter
-      lambda(0.9),          // trace-decay parameter
-      max_steps(10000),     // maximum number of steps
-      goal_thres(0.01),      // goal threshold
-      epsilon(0),           // random action probability
-      memory_size(3000),    // cmac memory size
-      tile_resolution(8),   // sub-tilings per tile
-      n_tilings(10),        // number of tilings
-      alpha(0.5)           // cmac learning update parameter
-
-{
-      action_levels = new double[n_action_levels];
-for (int i = 0; i < 5; i++) action_levels[i] = -1 + i * 0.5;
-}
-policy_parm::~policy_parm() {
-    delete[] action_levels;
-    delete[] id_state;
-    delete[] id_goal;
-}
-
-void policy_parm::set_n_goal(int n) {
-    n_goal = n;
-    id_goal = new int[n];
-}
-void policy_parm::set_n_state(int n) {
-    n_state = n;
-    id_state = new int[n];
-}
 
 policy::policy()
     : m(0),  // NULL pointer for model
@@ -123,6 +90,9 @@ void policy::set_parm(policy_parm* policy_parm) {
     _q = new double[p->n_action_levels];
     _cmac_input = new double[p->n_cmac_parms];
     msg::end_text();
+
+    _test_controller.set_parm(*p);
+    _test_controller.set_cmac_net(*n);
 }
 void policy::set_model(drone_parm* sim_parm) {
     msg::begin_text();
@@ -220,8 +190,16 @@ void policy::calc_cmac_input() {
     }
 }
 
+void policy::get_goal(double * goal){
+    goal[0] = _curr_goal[0];
+    qDebug()<<"curr goal: "<<goal[0];
+}
+
 void policy::run_episode() {
-    std::cout << YELLOW << "Running episode: " << RESET << std::endl;
+        _x_log.clear();
+        _xd_log.clear();
+        _timestamp_future.clear();
+//    std::cout << YELLOW << "Running episode: " << RESET << std::endl;
     m->reset();                      // reset model
     n->clear_traces();               // clear traces
     calc_cmac_input();               // update CMAC input
@@ -235,8 +213,55 @@ void policy::run_episode() {
         step++;
     }
 
-    std::cout << BOLDWHITE << "##########\n" << step << "\n##########" << RESET
-              << std::endl;
+    double weight_checksum_episode=0;
+    double weight_checksum_controller=0;
+
+    double q_checksum_episode = 0;
+    double q_checksum_controller = 0;
+
+    for (int i = 0; i < n->get_memory_size(); i++)
+        weight_checksum_episode+=n->get_weights()[i];
+
+    m->reset();
+    n->clear_traces();
+
+    _test_controller.set_cmac_net_weights(n->get_weights());
+    double state_tmp[p->n_state];
+    double goal_tmp[p->n_goal];
+    double input_tmp;
+    step = 0;
+
+    while(!goal_reached() && step < p->max_steps){
+    calc_cmac_input();
+    n->generate_tiles(_cmac_input);
+    calc_q();
+    q_checksum_episode += _q[0];
+        _x_log.append(m->get_state(p->id_state[0]));
+        _xd_log.append(m->get_state(p->id_state[1]));
+        _timestamp_future.append(0.1*step);
+        for (int i = 0; i < p->n_state;i++)
+            state_tmp[i] = m->get_state(p->id_state[i]);
+        for (int i = 0; i < p->n_goal; i++)
+            goal_tmp[i] = _curr_goal[i];
+        _test_controller.get_control_input(&input_tmp,state_tmp,goal_tmp);
+        q_checksum_controller+=_test_controller.get_q(0);
+        m->set_input(p->id_input,
+                     input_tmp);
+        m->rk4_step();
+        step++;
+    }
+    for (int i = 0; i < _test_controller.get_cmac_net()->get_memory_size(); i++)
+        weight_checksum_controller+=_test_controller.get_cmac_net()->get_weights()[i];
+
+//    qDebug()<< weight_checksum_controller << weight_checksum_episode;
+    qDebug()<< q_checksum_controller << q_checksum_episode;
+
+    emit update_future(_x_log,_xd_log,_timestamp_future);
+    emit update_goal(_goal_state[0]);
+
+//    std::cout << BOLDWHITE << "##########\n" << step << "\n##########" << RESET
+//              << std::endl;
+    _steps = step;
 }
 
 void policy::run_step() {
@@ -272,8 +297,8 @@ policy_parm* policy::get_policy_parm(){
     return p;
 }
 
-cmac_net* policy::get_cmac(){
-    return n;
+cmac_net policy::get_cmac(){
+    return *n;
 }
 
 void policy::report() {
@@ -282,4 +307,54 @@ void policy::report() {
     std::cout << "=====================" << std::endl;
     m->report();
     n->report();
+}
+
+void policy::get_controller_status(double *init_state, double *goal_state, int *steps){
+    for (int i = 0; i < p->n_state; i++){
+        init_state[i] = _init_state[i];
+    }
+    for (int i = 0; i < p->n_goal; i++){
+        goal_state[i] = _goal_state[i];
+    }
+
+    *steps = _steps;
+
+}
+
+void policy::learn(){
+    double input[4];
+//    QTimer *timer = new QTimer(this);
+//    connect(timer, SIGNAL(timeout()), this, SLOT(cache_update()));
+//    timer->start(1000);
+//    double init_state[p->n_state];
+    _init_state = new double[p->n_state];
+    _goal_state = new double[p->n_goal];
+
+
+
+    forever{
+        emit get_drone_state(_init_state,p->id_state,p->n_state);
+        emit get_joystick_input(input);
+        for (int i = 0; i < p->n_goal; i++)
+            _goal_state[i] = input[p->id_input]*p->goal_input_scale[i];
+        set_init(_init_state);
+        set_goal(_goal_state);
+        run_episode();
+        cache_update();
+//    qDebug()<< "Controller "<<_u<<","<<_id<<" cache update dispatch";
+    }
+
+}
+
+void policy::set_u(int u){
+    _u = u;
+}
+
+void policy::set_id(int id){
+    _id = id;
+}
+
+void policy::cache_update(){
+//    qDebug()<< "Controller "<<_u<<","<<_id<<" cache update dispatch received";
+    emit cmac_weights_cache_update(_u,_id,n->get_cmac_net_parm().weights);
 }

@@ -1,38 +1,5 @@
 #include "cmac_net.h"
 
-cmac_net_parm::cmac_net_parm()
-    :max_num_vars(20){
-
-}
-
-cmac_net_parm::~cmac_net_parm(){
-
-}
-
-cmac_net_parm& cmac_net_parm::operator=(const cmac_net_parm& source){
-    memory_size = source.memory_size;
-    num_tilings = source.num_tilings;
-    num_hashings = source.num_hashings;
-    num_inputs = source.num_inputs;
-    alpha = source.alpha;
-    gamma = source.gamma;
-    lambda = source.lambda;
-    tile_dimension = new double[num_inputs];
-    tile_sub_dimension = new double[num_inputs];
-
-    for (int i = 0; i < num_inputs; i++){
-        tile_dimension[i] = source.tile_dimension[i];
-        tile_sub_dimension[i] = source.tile_sub_dimension[i];
-    }
-
-    weights = new double[memory_size];
-    for (int i = 0; i < memory_size; i++){
-       weights[i] = source.weights[i];
-    }
-    tile_resolution = source.tile_resolution;
-    max_num_vars = source.max_num_vars;
-    return *this;
-}
 
 cmac_net::cmac_net(){}
 cmac_net::cmac_net
@@ -104,18 +71,19 @@ void cmac_net::map_pointers(){
 }
 
 cmac_net::~cmac_net() {
-    delete[] _traces_tmp;
-    _traces_tmp = NULL;
-    for (int i = 0; i < *_num_hashings; i++) {
-        delete[] _hashings_tmp[i];
-        _hashings_tmp[i] = NULL;
-    }
-    delete[] _hashings_tmp;
-    _hashings_tmp = NULL;
+//    delete[] _traces_tmp;
+//    _traces_tmp = NULL;
+//    for (int i = 0; i < *_num_hashings; i++) {
+//        delete[] _hashings_tmp[i];
+//        _hashings_tmp[i] = NULL;
+//    }
+//    delete[] _hashings_tmp;
+//    _hashings_tmp = NULL;
 }
 
 cmac_net& cmac_net::operator=(const cmac_net& source){
-    source.clone_parm(&this->_cmac_net_parm);
+//    source.clone_parm(&this->_cmac_net_parm);
+    _cmac_net_parm = source._cmac_net_parm;
     map_pointers();
     init_tmp();
     return *this;
@@ -197,6 +165,7 @@ void cmac_net::report() {
 
 int cmac_net::get_num_hashings() { return *_num_hashings; }
 double* cmac_net::get_weights() { return *_weights; }
+double cmac_net::get_weight(int n) { return 100; }
 int cmac_net::get_memory_size() { return *_memory_size; }
 int cmac_net::get_num_tilings() { return *_num_tilings; }
 
@@ -340,6 +309,6 @@ void cmac_net::set_weights(double * weights){
         *_weights[i] = weights[i];
 }
 
-//cmac_net_parm& cmac_net::get_cmac_net_parm(){
-//    return *_cmac_net_parm;
-//}
+cmac_net_parm cmac_net::get_cmac_net_parm(){
+    return _cmac_net_parm;
+}

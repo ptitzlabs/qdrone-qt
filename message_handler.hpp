@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include "console_color.h"
-#include <ncurses.h>
+//#include <ncurses.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>

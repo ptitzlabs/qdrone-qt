@@ -1,33 +1,15 @@
 #ifndef _CMAC_NET_H_
 #define _CMAC_NET_H_
 #include "RL_headers.h"
+#include "param_definitions.h"
 
-struct cmac_net_parm{
-    int memory_size;
-    int num_tilings;
-    int num_hashings;
-    int num_inputs;
-    double alpha;
-    double gamma;
-    double lambda;
-    double * tile_dimension;
-    double * tile_sub_dimension;
-    double * weights;
-    int tile_resolution;
-    int max_num_vars;
-
-    cmac_net_parm();
-    ~cmac_net_parm();
-
-    cmac_net_parm& operator=(const cmac_net_parm& source);
-};
 
 
 class cmac_net {
    public:
        cmac_net();
     cmac_net(int num_inputs, double* tile_dimension, int tile_resolution = 8,
-             int memory_size = 3000, int num_tilings = 10, int num_hashings = 3,
+             int memory_size = 100000, int num_tilings = 10, int num_hashings = 3,
              double alpha = 0.5, double gamma = 1, double lambda = 0.9);
 
     cmac_net& operator=(const cmac_net& source);
@@ -56,6 +38,7 @@ class cmac_net {
     void report();
     int get_num_hashings();
     double * get_weights();
+    double get_weight(int n);
     double * get_tile_sub_dimension();
     int get_memory_size();
     int get_num_tilings();
@@ -69,7 +52,7 @@ class cmac_net {
     void get_tiles(int tiles[],int num_tilings,double variables[], int num_variables, int memory_size, int hash1 = -1, int hash2 = -1, int hash3 = -1);
     int hash_coordinates(int *coordinates, int num_indices, int memory_size);
 
-   cmac_net_parm& get_cmac_net_parm();
+   cmac_net_parm get_cmac_net_parm();
 
    private:
 

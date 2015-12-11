@@ -6,55 +6,27 @@
 #include <iostream>
 #include "cmac_net.h"
 #include "drone_dynamics.hpp"
+#include "param_definitions.h"
 #include "message_handler.hpp"
 #include <string>
 #include <QString>
 #include <QObject>
+#include <QTimer>
+#include <QVector>
+#include <QDebug>
+#include "controller_client.h"
 
-struct policy_parm {
-    // State parameters
-    int id_input;           // input id
-    int n_action_levels;    // number of discrete action levels
-    double* action_levels;  // action levels applied to input
-    QString name; // controller name for output
-    int type; // 0: off, 1: deriv, 2: state, 3: state error
-    int id; // controller id number
+//class controller_client;
 
-    int* id_state;  // monitored states
-    int n_state;    // number of states
-    int* id_goal;   // goal states
-    int n_goal;     // number of goals
-
-
-    // Learning parameters
-    double gamma;        // discount-rate parameter
-    double lambda;       // trace-decay parameter
-    int max_steps;  // maximum number of steps
-    double goal_thres;   // fraction threshold for goal
-    double epsilon;     // probability of random action
-
-    // CMAC parameters
-    int memory_size;      // memory size to store the cmac
-    int tile_resolution;  // number of segments per tile
-    int n_tilings;        // number of overlapping tilings
-    double alpha;         // step-size parameter
-
-
-    int n_cmac_parms;
-
-    void set_n_goal(int n);
-    void set_n_state(int n);
-    policy_parm();
-    ~policy_parm();
-
-    policy_parm& operator=(const policy_parm& source);
-};
 
 class policy: public QObject {
     Q_OBJECT
    public:
     policy();
     ~policy();
+
+    void set_u(int u);
+    void set_id(int id);
 
     void set_parm(policy_parm* parm);
     void set_model(drone_parm* parm);
@@ -84,10 +56,21 @@ class policy: public QObject {
     void fun_test(int, int);
 
     policy_parm* get_policy_parm();
-    cmac_net * get_cmac();
+    void get_controller_status(double *init_stat, double *goal_stat, int *steps_stat);
+    cmac_net get_cmac();
+
+public slots:
+
+    void learn();
+    void cache_update();
+    void get_goal(double * goal);
 
 signals:
     void get_drone_state(double * state, int * state_id, int n_states);
+    void get_joystick_input(double * js);
+    void cmac_weights_cache_update(int u, int id, double * weights);
+    void update_future(QVector<double> x_future, QVector<double> xd_future, QVector<double> timestamp_future);
+    void update_goal(double goal);
 
    private:
     drone_dynamics* m;
@@ -99,5 +82,16 @@ signals:
     double* _curr_goal;
     int _action;
     double * _cmac_input;
+    double * _init_state;
+    double * _goal_state;
+    int _steps;
+
+    int _u;
+    int _id;
+
+    QVector<double> _x_log;
+    QVector<double> _xd_log;
+    QVector<double> _timestamp_future;
+    controller_client _test_controller;
 };
 #endif

@@ -25,6 +25,9 @@ main_app_ui::main_app_ui(QWidget *parent):
     _timer_50_hz->start(20);
     _timer_500_hz->start(2);
 
+    plot_refresh(ui->plot_state_t);
+    plot_refresh(ui->plot_state_stated);
+
 
 }
 
@@ -66,18 +69,26 @@ void main_app_ui::loop_50_hz(){
     this->ui->U2_s->setValue((int)(js.joystickPosition(0).x*100));
     this->ui->U3_s->setValue((int)(js.joystickPosition(0).y*100));
     this->ui->U4_s->setValue((int)(js.joystickPosition(1).x*100));
-}
 
-void main_app_ui::loop_25_hz(){}
-
-void main_app_ui::get_joystick_axis(double * axis){
-    axis[0] = js.joystickPosition(1).y;
-    axis[1] = js.joystickPosition(0).x;
-    axis[2] = -js.joystickPosition(0).y;
-    axis[3] = js.joystickPosition(1).x;
+//    this->ui->U1_b->setValue((int)(50+js.joystickPosition(1).y*50));
+//    this->ui->U2_b->setValue((int)(50+js.joystickPosition(0).x*50));
+//    this->ui->U3_b->setValue((int)(50+js.joystickPosition(0).y*50));
+//    this->ui->U4_b->setValue((int)(50+js.joystickPosition(1).x*50));
 
     emit get_drone_parm(_drone_parm_cache);
     emit get_controller_setting(_control_setting_cache,_control_name_cache);
+
+    double zd_init_state[3] = {0,0,0};
+    double zd_goal_state[1] = {0};
+    int steps = 0;
+
+    emit get_controller_status(0,0,zd_init_state,zd_goal_state,&steps);
+
+    this->ui->init_zd_val->setText(QString::number(zd_init_state[0],'f',1));
+    this->ui->init_zdd_val->setText(QString::number(zd_init_state[1],'f',1));
+    this->ui->init_aux0_val->setText(QString::number(zd_init_state[2],'f',1));
+    this->ui->target_zd_val->setText(QString::number(zd_goal_state[0],'f',1));
+    this->ui->steps_zd_val->setText(QString::number(steps));
 
     this->ui->x_l->setText(QString::number(_drone_parm_cache[0],'f',1));
     this->ui->y_l->setText(QString::number(_drone_parm_cache[1],'f',1));
@@ -111,4 +122,69 @@ void main_app_ui::get_joystick_axis(double * axis){
     this->ui->render_widget->repaint();
 
 
+}
+
+
+void main_app_ui::get_joystick_axis(double * axis){
+    axis[0] = js.joystickPosition(1).y;
+    axis[1] = js.joystickPosition(0).x;
+    axis[2] = -js.joystickPosition(0).y;
+    axis[3] = js.joystickPosition(1).x;
+}
+
+void main_app_ui::loop_25_hz(){
+}
+
+void main_app_ui::plot_refresh(QCustomPlot *plot){
+    QVector<double> x(101), y(101); // initialize with entries 0..100
+  for (int i=0; i<101; ++i)
+  {
+    x[i] = i/50.0 - 1; // x goes from -1 to 1
+    y[i] = x[i]*x[i];  // let's plot a quadratic function
+  }
+  // create graph and assign data to it:
+  plot->addGraph();
+  plot->addGraph();
+  plot->addGraph();
+  plot->addGraph();
+  plot->graph(0)->setData(x, y);
+  // give the axes some labels:
+  plot->xAxis->setLabel("x");
+  plot->yAxis->setLabel("y");
+  // set axes ranges, so we see all data:
+  plot->xAxis->setRange(-1, 1);
+  plot->yAxis->setRange(0, 1);
+  plot->replot();
+}
+
+void main_app_ui::draw_log(learning_log log){
+
+  ui->plot_state_t->graph(0)->setPen(QPen(Qt::red));
+  ui->plot_state_t->graph(1)->setPen(QPen(Qt::black));
+  ui->plot_state_t->graph(2)->setPen(QPen(Qt::gray));
+  ui->plot_state_t->graph(3)->setPen(QPen(Qt::darkGray));
+
+    ui->plot_state_t->graph(0)->setData(log.get_timestamp_future(),log.get_x_future());
+    ui->plot_state_t->graph(1)->setData(log.get_timestamp_log(),log.get_x_log());
+    ui->plot_state_t->graph(2)->setData(log.get_timestamp_log(),log.get_x_target_log());
+    ui->plot_state_t->xAxis->setRange(log.get_min_t(),log.get_max_t());
+    ui->plot_state_t->yAxis->setRange(-10,10);
+    ui->plot_state_t->xAxis->setLabel("t[s]");
+    ui->plot_state_t->yAxis->setLabel("zd[m/s]");
+    QVector<double> target_level_x;
+    QVector<double> target_level_y;
+    target_level_x.append(0);
+    target_level_x.append(log.get_max_t());
+    target_level_y.append(log.get_x_target_log().last());
+    target_level_y.append(log.get_x_target_log().last());
+    ui->plot_state_t->graph(3)->setData(target_level_x,target_level_y);
+    ui->plot_state_t->replot();
+
+  ui->plot_state_stated->graph(0)->setPen(QPen(Qt::red));
+    ui->plot_state_stated->graph(0)->setData(log.get_timestamp_future(),log.get_xd_future());
+    ui->plot_state_stated->xAxis->setRange(-5,5);
+    ui->plot_state_stated->yAxis->setRange(-10,10);
+    ui->plot_state_stated->xAxis->setLabel("t[s]");
+    ui->plot_state_stated->yAxis->setLabel("zdd[m/s2]");
+    ui->plot_state_stated->replot();
 }

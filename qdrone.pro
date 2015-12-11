@@ -9,7 +9,7 @@ QT       += core opengl gui
 CONFIG += c++11
 
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = qdrone
 TEMPLATE = app
@@ -21,9 +21,13 @@ SOURCES += main.cpp\
     gl_widget.cpp \
     policy_search.cpp \
     main_app_ui.cpp \
-    drone_dynamics.cpp \
     cmac_net.cpp \
-    message_handler.cpp
+    controller_client.cpp\
+    drone_dynamics.cpp \
+    param_definitions.cpp\
+    message_handler.cpp \
+    qcustomplot.cpp \
+    logging.cpp
 #        main_app.cpp \
 #    drone_thread.cpp \
 #    gl_widget.cpp \
@@ -46,10 +50,12 @@ HEADERS  += main_app.h \
     main_app_ui.h \
     qutils.h \
     RL_headers.h \
+    cmac_net.h \
+    controller_client.h \
     drone_dynamics.hpp \
+    param_definitions.h\
     message_handler.hpp \
     console_color.h \
-    cmac_net.h
 #main_app.h \
 #    drone_thread.h \
 #    gl_widget.h \
@@ -63,5 +69,7 @@ HEADERS  += main_app.h \
 #    message_handler.hpp \
 #    controller_server_thread.h \
 #    controller_client.h
+    qcustomplot.h \
+    logging.h
 
 FORMS    += main_app_ui.ui

@@ -8,6 +8,9 @@
 #include <iostream>
 
 #include "joystick.h"
+#include "qcustomplot.h"
+
+#include "logging.h"
 
 
 namespace Ui {
@@ -29,6 +32,7 @@ signals:
     void button_release_event(int button);
     void button_press_event(int button);
     void get_controller_setting(int * setting, QString * name);
+    void get_controller_status(int u, int id, double * init_stat, double *goal_stat, int * steps_stat);
 
 private:
     Ui::main_app_ui * ui;
@@ -45,11 +49,16 @@ private:
     int * _control_setting_cache;
     QString * _control_name_cache;
 
+    void plot_refresh(QCustomPlot * plot);
+
 private slots:
     void get_joystick_axis(double * axis);
     void loop_25_hz();
     void loop_50_hz();
     void loop_500_hz();
+
+    void draw_log(learning_log log);
+
 };
 
 #endif // MAIN_APP_UI_H
