@@ -8,8 +8,8 @@
 class cmac_net {
    public:
        cmac_net();
-    cmac_net(int num_inputs, double* tile_dimension, int tile_resolution = 8,
-             int memory_size = 100000, int num_tilings = 10, int num_hashings = 3,
+    cmac_net(int num_inputs, double* tile_dimension, int tile_resolution = 4,
+             int memory_size = 100000, int num_tilings = 5, int num_hashings = 3,
              double alpha = 0.5, double gamma = 1, double lambda = 0.9);
 
     cmac_net& operator=(const cmac_net& source);
@@ -74,8 +74,17 @@ class cmac_net {
     int* _tile_resolution;
     int* _max_num_vars;
 
+
     double* _outputs_tmp;
     int** _hashings_tmp;
+
+
+
+    int* _max_nonzero_traces;
+    int * _nonzero_traces;
+    int _num_nonzero_traces;
+    int * _nonzero_traces_lookup;
+    double * _min_trace;
     double* _traces_tmp;
 
 

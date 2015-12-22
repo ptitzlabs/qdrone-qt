@@ -1,5 +1,7 @@
 #include "main_app_ui.h"
 #include "ui_main_app_ui.h"
+#include "policy_plot.h"
+#include "plplot_qt.h"
 
 main_app_ui::main_app_ui(QWidget *parent):
     QMainWindow(parent),
@@ -9,6 +11,7 @@ main_app_ui::main_app_ui(QWidget *parent):
     ui->setupUi(this);
     _buttons_tmp = new int[_n_buttons]();
 
+    _timer_1_hz = new QTimer(this);
     _timer_25_hz = new QTimer(this);
     _timer_50_hz = new QTimer(this);
     _timer_500_hz = new QTimer(this);
@@ -21,6 +24,10 @@ main_app_ui::main_app_ui(QWidget *parent):
     connect(_timer_50_hz,SIGNAL(timeout()),this,SLOT(loop_50_hz()));
     connect(_timer_500_hz,SIGNAL(timeout()),this,SLOT(loop_500_hz()));
 
+    connect(&ui->policy_plot_widget->_rosenbrock->linker,SIGNAL(get_action_val(double*,double,double)),this,SLOT(get_action(double*,double,double)));
+    connect(_timer_25_hz,SIGNAL(timeout()),ui->policy_plot_widget,SLOT(repaint()));
+
+    _timer_1_hz->start(1000);
     _timer_25_hz->start(40);
     _timer_50_hz->start(20);
     _timer_500_hz->start(2);
@@ -121,6 +128,10 @@ void main_app_ui::loop_50_hz(){
 
     this->ui->render_widget->repaint();
 
+//    this->ui->policy_plot_widget->repaint();
+    
+    
+
 
 }
 
@@ -181,10 +192,19 @@ void main_app_ui::draw_log(learning_log log){
     ui->plot_state_t->replot();
 
   ui->plot_state_stated->graph(0)->setPen(QPen(Qt::red));
+  ui->plot_state_stated->graph(1)->setPen(QPen(Qt::black));
     ui->plot_state_stated->graph(0)->setData(log.get_timestamp_future(),log.get_xd_future());
+    ui->plot_state_stated->graph(1)->setData(log.get_timestamp_log(),log.get_xd_log());
     ui->plot_state_stated->xAxis->setRange(-5,5);
     ui->plot_state_stated->yAxis->setRange(-10,10);
     ui->plot_state_stated->xAxis->setLabel("t[s]");
     ui->plot_state_stated->yAxis->setLabel("zdd[m/s2]");
     ui->plot_state_stated->replot();
+}
+
+Ui::main_app_ui * main_app_ui::get_ui() { return ui; }
+
+void main_app_ui::get_action(double *control_input, double x, double xd){
+    emit get_action_val(control_input,x,xd);
+//    qDebug()<<"linker works OK in ui";
 }

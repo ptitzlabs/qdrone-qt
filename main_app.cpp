@@ -75,13 +75,23 @@ void main_app::get_policy_cmac_weights(int u, int id, double *weights){
     
 //}
 
+void main_app::policy_plot_redraw(double * z, double x, double xd){
+//    double * z = new double();
+//    double x = 0;
+//    double y = 0;
+//    emit policy_plot_check_linker(z,x,y);
+    _policy[0][0]->get_action_val(z,x,xd);
+//    qDebug() << "policy plot redraw";
+}
 
 void main_app::connect_signals(){
     qRegisterMetaType<QVector<double> >("QVector<double>");
 
     connect(log,SIGNAL(get_drone_state(double*,int*,int)),_drone_dynamics,SLOT(get_state(double*,int*,int)));
     connect(_sim_timer,SIGNAL(timeout()),log,SLOT(update_log()));
+//    connect(_sim_timer,SIGNAL(timeout()),this,SLOT(policy_plot_redraw()));
     connect(log,SIGNAL(draw_log(learning_log)),&ui,SLOT(draw_log(learning_log)));
+
 
 
 
@@ -95,8 +105,10 @@ void main_app::connect_signals(){
     // Controller button routing
     connect(&ui,SIGNAL(button_press_event(int)),this,SLOT(button_press_event_router(int)));
 
+
     connect(this,SIGNAL(reset_sim()),_drone_dynamics,SLOT(reset_sim()));
     connect(this,SIGNAL(set_drone_controller_setting(int,int)),_drone_dynamics,SLOT(set_controller_setting(int,int)));
+    
 
     connect(&ui,SIGNAL(get_controller_status(int,int,double*,double*,int*)),
             this,SLOT(get_controller_status(int,int,double*,double*,int*)));
@@ -123,11 +135,14 @@ void main_app::connect_signals(){
                     log,SLOT(update_future(QVector<double>,QVector<double>,QVector<double>)));
             connect(log,SIGNAL(get_goal(double*)),_policy[i][j],SLOT(get_goal(double*)));
             connect(_policy[i][j],SIGNAL(update_goal(double)),log,SLOT(update_goal(double)));
+//            connect(this,SIGNAL(policy_plot_check_linker(double*,double,double)),_policy[i][j],SLOT(get_action_val(double*,double,double)));
+            connect(&ui,SIGNAL(get_action_val(double*,double,double)),this,SLOT(policy_plot_redraw(double*, double, double)));
         }
     }
 
     connect(_drone_dynamics,SIGNAL(get_controller_cmac_weights(int,int,double*)),
             this,SLOT(get_policy_cmac_weights(int,int,double*)));
+
 
 //    connect(this,SIGNAL(draw_log(learning_log)),&ui,SLOT(draw_log(learning_log)));
 
@@ -230,7 +245,11 @@ void main_app::init_policy_parm(){
     _policy_parm[0][0].id_state[2] = 18;
 
     _policy_parm[0][0].id_input = 0;
-    _policy_parm[0][0].max_steps = 10000;
+    _policy_parm[0][0].max_steps = 500;
+    _policy_parm[0][0].goal_thres = 0.002;
+    _policy_parm[0][0].memory_size = 10000;
+    _policy_parm[0][0].tile_resolution = 6;
+    _policy_parm[0][0].n_tilings = 10;
 //    alt_rate_control.report();
 //    _policy[0][0].set_model(&_drone_parm);
     _policy[0][0]->set_parm(&_policy_parm[0][0]);

@@ -4,16 +4,16 @@
 #
 #-------------------------------------------------
 
-LIBS += -L/path/to -lGLEW -lglfw -lfreetype -lglut -lGLU
-QT       += core opengl gui
-CONFIG += c++11
-
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
-
+QT       += core gui widgets opengl printsupport
+CONFIG += g++11
 TARGET = qdrone
-TEMPLATE = app
+INCLUDEPATH += /usr/include
+DEPENDPATH = $$INCLUDEPATH
 
+LIBS += -L/usr/local/lib -lGLEW -lglfw -lfreetype -lglut -lGLU -lqwtplot3d-qt5
+
+#greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
+TEMPLATE = app
 
 SOURCES += main.cpp\
     main_app.cpp \
@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     param_definitions.cpp\
     message_handler.cpp \
     qcustomplot.cpp \
-    logging.cpp
+    logging.cpp \
+    policy_plot.cpp
 #        main_app.cpp \
 #    drone_thread.cpp \
 #    gl_widget.cpp \
@@ -70,6 +71,7 @@ HEADERS  += main_app.h \
 #    controller_server_thread.h \
 #    controller_client.h
     qcustomplot.h \
-    logging.h
+    logging.h \
+    policy_plot.h
 
 FORMS    += main_app_ui.ui

@@ -25,6 +25,7 @@ signals:
     void reset_sim();
     void init_drone_controller_parm(int * n_controllers);
     void cache_update_dispatch_call();
+    void policy_plot_check_linker(double *z, double x, double y);
 //    void get_cmac_cache();
 
 private:
@@ -85,6 +86,9 @@ private slots:
 
     void cmac_weights_cache_update(int u, int id, double * weights);
     void cache_update();
+
+
+    void policy_plot_redraw(double* z, double x, double xd);
 //    void update_cmac_cache(int id, double * weights);
 
 

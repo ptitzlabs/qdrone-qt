@@ -23,15 +23,15 @@ drone_parm::drone_parm()
 
     // allocating and assigning limits
 
-    lower_limit = new double[n_states];
-    upper_limit = new double[n_states];
-    spread = new double[n_states];
+    lower_limit = new double[n_states]();
+    upper_limit = new double[n_states]();
+    spread = new double[n_states]();
 
-    for (int i = 0; i < n_states; i++){
-        lower_limit[i] = 0;
-        upper_limit[i] = 0;
-        spread[i] = 0;
-    }
+//    for (int i = 0; i < n_states; i++){
+//        lower_limit[i] = 0;
+//        upper_limit[i] = 0;
+//        spread[i] = 0;
+//    }
 
     lower_limit[8] = -20;
     upper_limit[8] = 10;
@@ -65,11 +65,15 @@ drone_parm& drone_parm::operator=(const drone_parm& parm){
     lower_limit = new double[n_states];
     upper_limit = new double[n_states];
     spread = new double[n_states];
-    for (int i = 0; i < n_states; i++){
-        lower_limit[i] = parm.lower_limit[i];
-        upper_limit[i] = parm.upper_limit[i];
-        spread[i] = parm.spread[i];
-    }
+//    for (int i = 0; i < n_states; i++){
+//        lower_limit[i] = parm.lower_limit[i];
+//        upper_limit[i] = parm.upper_limit[i];
+//        spread[i] = parm.spread[i];
+//    }
+
+    memcpy(lower_limit,parm.lower_limit,n_states*sizeof(double));
+    memcpy(upper_limit,parm.upper_limit,n_states*sizeof(double));
+    memcpy(spread,parm.spread,n_states*sizeof(double));
 
     a1_phi = parm.a1_phi;
     a1_the = parm.a1_the;
@@ -89,10 +93,10 @@ policy_parm::policy_parm()
       id_goal(0),           // null-pointer
       gamma(1),             // discount-rate parameter
       lambda(0.9),          // trace-decay parameter
-      max_steps(10000),     // maximum number of steps
+      max_steps(1000),     // maximum number of steps
       goal_thres(0.01),      // goal threshold
-      epsilon(0.1),           // random action probability
-      memory_size(3000),    // cmac memory size
+      epsilon(0.2),           // random action probability
+      memory_size(5000),    // cmac memory size
       tile_resolution(8),   // sub-tilings per tile
       n_tilings(10),        // number of tilings
       alpha(0.5)           // cmac learning update parameter
@@ -118,7 +122,9 @@ void policy_parm::set_n_state(int n) {
     id_state = new int[n];
 }
 cmac_net_parm::cmac_net_parm()
-    :max_num_vars(20){
+    :max_num_vars(20),
+max_nonzero_traces(1000),
+min_trace(0.01){
 
 }
 
@@ -136,16 +142,22 @@ cmac_net_parm& cmac_net_parm::operator=(const cmac_net_parm& source){
     lambda = source.lambda;
     tile_dimension = new double[num_inputs];
     tile_sub_dimension = new double[num_inputs];
-
-    for (int i = 0; i < num_inputs; i++){
-        tile_dimension[i] = source.tile_dimension[i];
-        tile_sub_dimension[i] = source.tile_sub_dimension[i];
-    }
-
     weights = new double[memory_size];
-    for (int i = 0; i < memory_size; i++){
-       weights[i] = source.weights[i];
-    }
+
+//    for (int i = 0; i < num_inputs; i++){
+//        tile_dimension[i] = source.tile_dimension[i];
+//        tile_sub_dimension[i] = source.tile_sub_dimension[i];
+//    }
+
+
+//    for (int i = 0; i < memory_size; i++){
+//       weights[i] = source.weights[i];
+//    }
+
+
+    memcpy(tile_dimension,source.tile_dimension,num_inputs*sizeof(double));
+    memcpy(tile_sub_dimension,source.tile_sub_dimension,num_inputs*sizeof(double));
+    memcpy(weights,source.weights,memory_size*sizeof(double));
     tile_resolution = source.tile_resolution;
     max_num_vars = source.max_num_vars;
     return *this;

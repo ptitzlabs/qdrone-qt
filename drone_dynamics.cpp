@@ -170,8 +170,8 @@ void drone_dynamics::calc_aux(int id, double **parm) {
 }
 
 // Set parameters
-void drone_dynamics::set_parm(double **parm) {
-    for (int i = 0; i < _n_parms; i++) set_parm(i, *parm[i]);
+void drone_dynamics::set_parm(double *parm) {
+    for (int i = 0; i < _n_parms; i++) set_parm(i, parm[i]);
 }
 
 // Set individual parameters
@@ -237,10 +237,10 @@ void drone_dynamics::input_scale(int id, double u_scaled, double *u_true) {
                       //<< " U_TRUE: " << *u_true;
             break;
         case 1:
-            *u_true = u_scaled * 0.01;
+            *u_true = u_scaled * 0.1;
             break;
         case 2:
-            *u_true = u_scaled * 0.01;
+            *u_true = u_scaled * 0.1;
             break;
         case 3:
             *u_true = u_scaled * 0.01;
@@ -487,7 +487,7 @@ void drone_dynamics::get_control_input(){
     int n_goal;
     int * id_state;
     int * id_goal;
-    double * input_scale;
+    double ** input_scale;
 
 
     for (int u = 0; u < 4; u++){
@@ -498,12 +498,17 @@ void drone_dynamics::get_control_input(){
             n_goal = _controller[u][id]->get_policy_parm()->n_goal;
             id_state = _controller[u][id]->get_policy_parm()->id_state;
             id_goal = _controller[u][id]->get_policy_parm()->id_goal;
-            input_scale = _controller[u][id]->get_policy_parm()->goal_input_scale;
+//            *input_scale = _controller[u][id]->get_policy_parm()->goal_input_scale;
             state_tmp = new double[n_state];
             goal_tmp = new double[n_goal];
             get_state(state_tmp,id_state,n_state);
-            for (int i = 0; i < n_goal; i++)
-                goal_tmp[i] = 0;
+            for (int i = 0; i < n_goal; i++){
+                goal_tmp[i] = _u_scaled[u] * _controller[u][id]->get_policy_parm()->goal_input_scale[i];
+
+            }
+
+//            qDebug()<<"Debug: "<<goal_tmp[0]<<_controller[u][id]->get_policy_parm()->goal_input_scale[0];
+
             emit get_controller_cmac_weights(u,id,weights_tmp);
 //            double sum;
 //            for (int i = 0; i < 3000; i++)

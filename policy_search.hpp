@@ -12,6 +12,8 @@
 #include <QString>
 #include <QObject>
 #include <QTimer>
+#include <QMutex>
+#include <QThread>
 #include <QVector>
 #include <QDebug>
 #include "controller_client.h"
@@ -58,6 +60,8 @@ class policy: public QObject {
     policy_parm* get_policy_parm();
     void get_controller_status(double *init_stat, double *goal_stat, int *steps_stat);
     cmac_net get_cmac();
+    void wtf();
+    void get_action_val(double *z, double x, double xd);
 
 public slots:
 
@@ -73,6 +77,8 @@ signals:
     void update_goal(double goal);
 
    private:
+
+    void set_init();
     drone_dynamics* m;
     cmac_net* n;
     policy_parm* p;
@@ -80,11 +86,14 @@ signals:
     // cache variables
     double *_q; // stores local Q-values
     double* _curr_goal;
+    double _init_dist;
     int _action;
     double * _cmac_input;
     double * _init_state;
     double * _goal_state;
+    double * _full_init_state;
     int _steps;
+
 
     int _u;
     int _id;
@@ -93,5 +102,11 @@ signals:
     QVector<double> _xd_log;
     QVector<double> _timestamp_future;
     controller_client _test_controller;
+
+    double* _goal_tmp;
+    double* _state_tmp;
+    double* _input_tmp;
+
+    QMutex _weight_mutex;
 };
 #endif

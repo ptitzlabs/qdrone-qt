@@ -23,14 +23,15 @@ void cmac_net::parm_init(int num_inputs, double* tile_dimension,
     _cmac_net_parm.lambda = lambda;
     _cmac_net_parm.num_inputs = num_inputs;
     _cmac_net_parm.weights = new double[memory_size]();
-    _cmac_net_parm.tile_dimension = new double[num_inputs];
-    _cmac_net_parm.tile_sub_dimension = new double[num_inputs];
+    _cmac_net_parm.tile_dimension = new double[num_inputs]();
+    _cmac_net_parm.tile_sub_dimension = new double[num_inputs]();
     for (int i = 0; i < num_inputs; i++) {
         _cmac_net_parm.tile_dimension[i] = tile_dimension[i];  // tile dimensions are stored
         _cmac_net_parm.tile_sub_dimension[i] =
             tile_dimension[i] /
             (double)tile_resolution;  // tile sub-dimensions are calculated
     }
+
     map_pointers();
     init_tmp();
 
@@ -43,6 +44,9 @@ void cmac_net::init_tmp(){
         _hashings_tmp[i] =
             new int[*_num_tilings]();  // allocate enough feature hashings to get
                                    // individual tile outputs for each action
+    _nonzero_traces = new int[*_max_nonzero_traces];
+    _nonzero_traces_lookup = new int[*_memory_size];
+
 
 }
 
@@ -67,7 +71,10 @@ void cmac_net::map_pointers(){
     _weights = new double*[*_memory_size];
     for (int i = 0; i < *_memory_size; i++)
         _weights[i] = & _cmac_net_parm.weights[i];
+//        _weights = &_cmac_net_parm.weights;
     _max_num_vars = &_cmac_net_parm.max_num_vars;
+    _max_nonzero_traces = &_cmac_net_parm.max_nonzero_traces;
+    _min_trace = &_cmac_net_parm.min_trace;
 }
 
 cmac_net::~cmac_net() {
@@ -94,10 +101,12 @@ void cmac_net::clone_cmac_net_parm(cmac_net_parm * target) const{
 }
 
 void cmac_net::clear_traces() {
-    for (int i = 0; i < *_memory_size; i++) _traces_tmp[i] = 0.0f;
+//    for (int i = 0; i < *_memory_size; i++) _traces_tmp[i] = 0.0f;
+    memset(_traces_tmp,0,sizeof(_traces_tmp));
 }
 void cmac_net::clear_weights() {
-    for (int i = 0; i < *_memory_size; i++) *_weights[i] = 0.0f;
+//    for (int i = 0; i < *_memory_size; i++) *_weights[i] = 0.0f;
+    memset(*_weights,0,sizeof(*_weights));
 }
 void cmac_net::drop_traces() {
     for (int i = 0; i < *_memory_size; i++) _traces_tmp[i] *= *_gamma * *_lambda;
@@ -305,8 +314,9 @@ void cmac_net::clone_weights(cmac_net * net){
 }
 
 void cmac_net::set_weights(double * weights){
-    for(int i = 0; i < *_memory_size; i++)
-        *_weights[i] = weights[i];
+    memcpy(*_weights,weights,*_memory_size*sizeof(double));
+//    for(int i = 0; i < *_memory_size; i++)
+//        *_weights[i] = weights[i];
 }
 
 cmac_net_parm cmac_net::get_cmac_net_parm(){

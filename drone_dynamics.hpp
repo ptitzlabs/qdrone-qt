@@ -27,7 +27,7 @@ class drone_dynamics : public QObject{
     void calc_aux(double** parm);
     void calc_aux(int id, double** parm);
 
-    void set_parm(double** parm);
+    void set_parm(double* parm);
     void set_parm(int id, double parm);
 
     void set_input(double * u_scaled);

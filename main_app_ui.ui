@@ -17,7 +17,7 @@
    <string>main_app</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QGroupBox" name="groupBox">
+   <widget class="QGroupBox" name="controller_status">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -442,13 +442,13 @@
       <x>520</x>
       <y>10</y>
       <width>721</width>
-      <height>581</height>
+      <height>781</height>
      </rect>
     </property>
     <property name="title">
      <string>Simulation</string>
     </property>
-    <widget class="QGroupBox" name="groupBox_3">
+    <widget class="QGroupBox" name="current_sim_state">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -805,7 +805,7 @@
      <zorder>thedd_l</zorder>
      <zorder>phidd_l</zorder>
     </widget>
-    <widget class="QGroupBox" name="groupBox_5">
+    <widget class="QGroupBox" name="artificial_horizon">
      <property name="geometry">
       <rect>
        <x>310</x>
@@ -828,7 +828,7 @@
       </property>
      </widget>
     </widget>
-    <widget class="QGroupBox" name="groupBox_4">
+    <widget class="QGroupBox" name="inputs_status">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1005,8 +1005,18 @@
       </property>
      </widget>
     </widget>
+    <widget class="policy_plot" name="policy_plot_widget" native="true">
+     <property name="geometry">
+      <rect>
+       <x>39</x>
+       <y>459</y>
+       <width>261</width>
+       <height>301</height>
+      </rect>
+     </property>
+    </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBox_7">
+   <widget class="QGroupBox" name="learning_log">
     <property name="geometry">
      <rect>
       <x>9</x>
@@ -1041,6 +1051,12 @@
    <class>QCustomPlot</class>
    <extends>QWidget</extends>
    <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>policy_plot</class>
+   <extends>QWidget</extends>
+   <header location="global">policy_plot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

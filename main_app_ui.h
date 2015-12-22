@@ -9,6 +9,7 @@
 
 #include "joystick.h"
 #include "qcustomplot.h"
+#include "policy_plot.h"
 
 #include "logging.h"
 
@@ -25,6 +26,7 @@ public:
     ~main_app_ui();
 
     void run();
+    Ui::main_app_ui * get_ui();
 
 signals:
     void get_drone_parm(double *parm);
@@ -33,6 +35,7 @@ signals:
     void button_press_event(int button);
     void get_controller_setting(int * setting, QString * name);
     void get_controller_status(int u, int id, double * init_stat, double *goal_stat, int * steps_stat);
+    void get_action_val(double * control_input, double x, double xd);
 
 private:
     Ui::main_app_ui * ui;
@@ -41,6 +44,7 @@ private:
     int _n_buttons;
     int * _buttons_tmp;
 
+    QTimer *_timer_1_hz;
     QTimer *_timer_25_hz;
     QTimer *_timer_50_hz;
     QTimer *_timer_500_hz;
@@ -48,6 +52,10 @@ private:
     double * _drone_parm_cache;
     int * _control_setting_cache;
     QString * _control_name_cache;
+
+//    plplot_policy_display _policy_display;
+
+
 
     void plot_refresh(QCustomPlot * plot);
 
@@ -58,6 +66,7 @@ private slots:
     void loop_500_hz();
 
     void draw_log(learning_log log);
+    void get_action(double * control_input, double x, double xd);
 
 };
 

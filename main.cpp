@@ -1,10 +1,12 @@
 //#include "main_app.h"
 //#include <GL/glew.h>
 #include <QApplication>
+
+#include <QGLWidget>
+#include <QtOpenGL>
 #include <cstdio>
 #include <iostream>
 #include <GL/glut.h>
-//#include "param_definitions.h"
 #include "main_app.h"
 #include <QTimer>
 

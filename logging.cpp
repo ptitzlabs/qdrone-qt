@@ -73,7 +73,8 @@ void logging::update_log(){
     int * state_id_tmp = new int[2];
 
     state_id_tmp[0] = _z_deriv.get_x_id();
-    state_id_tmp[1] = _z_deriv.get_xd_id();
+//    state_id_tmp[1] = _z_deriv.get_xd_id();
+    state_id_tmp[1] = 14;
 
     state_id_tmp[1] = 14;
 
@@ -81,7 +82,7 @@ void logging::update_log(){
 
     emit get_goal(goal_tmp);
 
-    emit get_drone_state(state_tmp,state_id_tmp,1);
+    emit get_drone_state(state_tmp,state_id_tmp,2);
 
 //    state_tmp[0] = 1;
 //    state_tmp[1] = 2;

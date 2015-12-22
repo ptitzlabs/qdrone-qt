@@ -24,7 +24,7 @@ void controller_client::set_cmac_net_weights(double * weights){
 void controller_client::calc_cmac_input(double * state, double * goal){
         // Supply current state as CMAC input
     for (int i = 0; i < _policy_parm.n_state; i++) {
-        _cmac_input[i] = state[_policy_parm.id_state[i]];
+        _cmac_input[i] = state[i];
     }
     // Supply goal state as CMAC input
     for (int i = 0; i < _policy_parm.n_goal; i++) {
@@ -61,6 +61,7 @@ int controller_client::calc_action() {
 
 void controller_client::get_control_input(double* input, double * client_state, double * goal_state){
     calc_cmac_input(client_state, goal_state);
+//    qDebug()<<_cmac_input[0]<<_cmac_input[1]<<_cmac_input[2]<<_cmac_input[3];
     _cmac_net.generate_tiles(_cmac_input);
     calc_q();
     int _action = calc_action();

@@ -82,6 +82,9 @@ struct cmac_net_parm{
     int tile_resolution;
     int max_num_vars;
 
+    int max_nonzero_traces;
+    double min_trace;
+
     cmac_net_parm();
     ~cmac_net_parm();
 
